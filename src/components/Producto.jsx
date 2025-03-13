@@ -1,10 +1,11 @@
 import { formatearDinero } from "../helpers";
 import useQuiosco from "../hooks/useQuiosco";
 
-export default function Producto({producto}) {
+export default function Producto({ producto }) {
+  const { handleClickModal, handleSetProducto } = useQuiosco();  // 🔥 IMPORTANTE: Asegúrate de extraer `handleSetProducto`
 
-  const {handleClickModal} = useQuiosco();
-    const {id, nombre, precio, categoria_id, imagen} = producto;
+  const { id, nombre, precio, imagen } = producto;
+
   return (
     <div className="border p-3 shadow bg-white">
       <img
@@ -16,11 +17,16 @@ export default function Producto({producto}) {
         <h3 className="text-2xl font-bold">{nombre}</h3>
         <p className="mt-5 font-black text-4xl text-amber-500">{formatearDinero(precio)}</p>
 
-        <button className="bg-indigo-500 hover:bg-indigo-700 text-white w-full mt-5 p-3  uppercase font-bold" onClick={() => handleClickModal()}>
+        <button
+          className="bg-indigo-500 hover:bg-indigo-700 text-white w-full mt-5 p-3 uppercase font-bold"
+          onClick={() => {
+            handleSetProducto(producto);  
+            handleClickModal();           
+          }}
+        >
           Agregar al carrito
         </button>
       </div>
     </div>
-
-  )
+  );
 }
