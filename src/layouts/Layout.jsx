@@ -7,9 +7,7 @@ import Resumen from '../components/Resumen';
 import ModalProducto from '../components/ModalProducto';
 
 import useQuiosco from '../hooks/useQuiosco';  // Importación de hooks personalizados
-
-
-
+import { useAuth } from '../hooks/useAuth';
 
 const customStyles = {
   content: {
@@ -25,9 +23,10 @@ const customStyles = {
 Modal.setAppElement("#root"); // Para que no de error de accesibilidad
 
 export default function Layout() {
+
+  useAuth({ middleware: 'auth' });
   const { modal, handleClickModal } = useQuiosco();
 
-  console.log(modal)
   return (
     <>
       <div className='md:flex'>

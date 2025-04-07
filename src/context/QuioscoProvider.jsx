@@ -1,12 +1,13 @@
 import { createContext, useState, useEffect } from "react";
 import { toast } from "react-toastify";
-import { categorias as categoriasDB } from "../data/categorias";
+import clienteAxios from "../config/axios";
+
 
 const QuioscoContext = createContext();
 
 const QuioscoProvider = ({ children }) => {
-  const [categorias, setCategorias] = useState(categoriasDB);
-  const [categoriaActual, setCategoriaActual] = useState(categoriasDB[0] || {});
+  const [categorias, setCategorias] = useState([]);
+  const [categoriaActual, setCategoriaActual] = useState({});
   const [modal, setModal] = useState(false);  // Asegúrate de que el estado inicial sea falso
   const [producto, setProducto] = useState({});
   const [pedido, setPedido] = useState([]);
@@ -17,6 +18,25 @@ const QuioscoProvider = ({ children }) => {
     setTotal(nuevoTotal);
   }, [pedido]);
 
+
+  const obtenerCategorias = async () => {
+    const token = localStorage.getItem('AUTH_TOKEN');
+
+    try {
+      const { data } = await clienteAxios('/api/categorias', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      setCategorias(data.data);
+      setCategoriaActual(data.data[0]);
+
+    } catch (error) {
+
+      console.log(error);
+    }
+  };
+
+  useEffect(() => { obtenerCategorias(); }, []);
 
   const handleClickCategoria = (id) => {
     const categoria = categorias.find((categoria) => categoria.id === id);
@@ -95,6 +115,70 @@ const QuioscoProvider = ({ children }) => {
     });
   };
 
+  const handleSubmitNuevaOrden = async (logout) => {
+    const token = localStorage.getItem('AUTH_TOKEN');
+    try {
+      const { data } = await clienteAxios.post('/api/pedidos',
+        {
+          total,
+          productos: pedido.map(producto => {
+            return {
+              id: producto.id,
+              cantidad: producto.cantidad
+            }
+          }),
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+
+      toast.success(data.message);
+      setTimeout(() => {
+        setPedido([])
+      }, 1000);
+
+      //Cerrar Sesión
+
+      setTimeout(() => {
+        localStorage.removeItem('AUTH_TOKEN');
+        logout();
+      }, 3000)
+
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleClickCompletarPedido = async id => {
+    const token = localStorage.getItem('AUTH_TOKEN');
+    try {
+      const { data } = clienteAxios.post(`/api/pedidos/${id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.success(data.message);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  const handleClickProductoAgotado = async id => {
+    const token = localStorage.getItem('AUTH_TOKEN');
+    try {
+      const { data } = clienteAxios.post(`/api/productos/${id}`, null, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      toast.success(data.message);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   return (
     <QuioscoContext.Provider
       value={{
@@ -109,7 +193,10 @@ const QuioscoProvider = ({ children }) => {
         handleAgregarProducto,
         handleEditarCantidad,
         handleEliminarProducto,
-        total
+        total,
+        handleSubmitNuevaOrden,
+        handleClickCompletarPedido,
+        handleClickProductoAgotado,
       }}
     >
       {children}

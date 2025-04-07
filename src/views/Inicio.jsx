@@ -1,12 +1,32 @@
-import { productos as data } from '../data/productos';
+import useSWR from 'swr';
 import Producto from '../components/Producto';
 import useQuiosco from '../hooks/useQuiosco';
+import clienteAxios from '../config/axios';
+import { data } from 'autoprefixer';
 
 export default function Inicio() {
   const { categoriaActual } = useQuiosco();
+  // Consulta SWR
+
+  const token = localStorage.getItem('AUTH_TOKEN');
+  const fetcher = () => clienteAxios('/api/productos', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }).then(data => data.data);
+  const { data, error, isLoading } = useSWR('/productos', fetcher, {
+    refreshInterval: 1000
+  });
+
+  console.log(data)
+  console.log(error)
+  console.log(isLoading)
+
+  if (isLoading) return <p className="text-center text-xl text-gray-500">Cargando productos...</p>;
+
 
   // Filtrar productos que pertenecen a la categoría actual
-  const productos = data.filter(producto => producto.categoria_id === categoriaActual?.id);
+  const productos = data.data.filter(producto => producto.categoria_id === categoriaActual?.id);
 
   return (
     <>
